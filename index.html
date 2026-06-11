@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Dump It">
+<title>Dump It</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{--bg:#f8f7f4;--sur:#fff;--txt:#1a1a18;--mut:#888780;--bdr:rgba(0,0,0,0.1);--r:14px}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--txt);min-height:100vh;min-height:-webkit-fill-available}
+#app{max-width:420px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column}
+#cap{display:flex;flex-direction:column;align-items:center;padding:2.5rem 1.5rem;gap:1.6rem;flex:1;justify-content:center}
+#stat{font-size:14px;color:var(--mut);text-align:center;min-height:20px}
+#stat.on{color:var(--txt);font-weight:500}
+#mic{width:92px;height:92px;border-radius:50%;background:var(--sur);border:.5px solid var(--bdr);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:transform .15s;user-select:none;flex-shrink:0}
+#mic:active{transform:scale(.91)}
+#mic.go{border-color:#E24B4A;animation:pu 1.4s ease-in-out infinite}
+@keyframes pu{0%,100%{box-shadow:0 0 0 0 rgba(226,75,74,.18)}50%{box-shadow:0 0 0 14px rgba(226,75,74,0)}}
+#mic svg{width:34px;height:34px}
+#mic.go .mbody{fill:#E24B4A}
+#catrow{display:none;align-items:center;gap:7px;font-size:13px;color:var(--mut);width:100%}
+#catrow.show{display:flex}
+#pill{padding:3px 12px;border-radius:20px;font-size:12px;font-weight:500}
+textarea{width:100%;background:var(--sur);border:.5px solid var(--bdr);border-radius:var(--r);padding:12px 14px;font-size:16px;color:var(--txt);min-height:80px;outline:none;resize:none;line-height:1.6;font-family:inherit}
+textarea:focus{border-color:rgba(0,0,0,.2)}
+textarea::placeholder{color:var(--mut)}
+#btnrow{display:flex;gap:10px;width:100%}
+#sbtn{flex:1;padding:15px;background:var(--txt);color:var(--bg);border:none;border-radius:var(--r);font-size:16px;font-weight:500;cursor:pointer;font-family:inherit;transition:opacity .15s,transform .1s}
+#sbtn:active{transform:scale(.97);opacity:.85}
+#sbtn:disabled{opacity:.28;cursor:default;transform:none}
+#vbtn{padding:15px 18px;background:transparent;color:var(--mut);border:.5px solid var(--bdr);border-radius:var(--r);font-size:15px;cursor:pointer;font-family:inherit;white-space:nowrap}
+#vbtn:active{color:var(--txt)}
+#notes{display:none;flex-direction:column;min-height:100vh}
+#notes.show{display:flex}
+#nh{padding:1rem 1.25rem .8rem;display:flex;align-items:center;justify-content:space-between;border-bottom:.5px solid var(--bdr);background:var(--bg);position:sticky;top:0}
+#nh b{font-size:17px;font-weight:500}
+#bbtn{background:none;border:none;color:var(--mut);font-size:14px;cursor:pointer;font-family:inherit;padding:4px 0}
+#nl{flex:1;padding:1rem 1.25rem;display:flex;flex-direction:column;gap:1.5rem}
+.cs h2{font-size:10px;font-weight:500;letter-spacing:.07em;text-transform:uppercase;margin-bottom:.5rem}
+.ni{background:var(--sur);border:.5px solid var(--bdr);border-radius:10px;padding:12px 14px;margin-bottom:7px;display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.nt{font-size:15px;line-height:1.5;flex:1}
+.nm{font-size:11px;color:var(--mut);white-space:nowrap;padding-top:3px}
+.nd{background:none;border:none;color:var(--mut);font-size:18px;cursor:pointer;padding:0 0 0 6px;opacity:.4;line-height:1}
+.nd:active{opacity:1;color:#E24B4A}
+.emp{text-align:center;color:var(--mut);font-size:14px;padding:3rem 0}
+#toast{position:fixed;bottom:2rem;left:50%;transform:translateX(-50%) translateY(14px);background:var(--txt);color:var(--bg);padding:10px 20px;border-radius:24px;font-size:14px;font-weight:500;opacity:0;transition:opacity .2s,transform .2s;pointer-events:none;white-space:nowrap;z-index:99}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+@media(prefers-color-scheme:dark){
+  :root{--bg:#1a1a18;--sur:#2c2c2a;--txt:#f1efe8;--mut:#888780;--bdr:rgba(255,255,255,0.1)}
+}
+</style>
+</head>
+<body>
+<div id="app">
+ <div id="cap">
+  <div id="stat">Tap the mic to speak, or type below</div>
+  <button id="mic" onclick="toggleMic()" aria-label="Dictate note">
+   <svg viewBox="0 0 24 24" fill="none">
+    <path class="mbody" d="M12 2C10.34 2 9 3.34 9 5v7c0 1.66 1.34 3 3 3s3-1.34 3-3V5c0-1.66-1.34-3-3-3z" fill="currentColor"/>
+    <path d="M6 11c0-3.31 2.69-6 6-6V3C7.58 3 4 6.58 4 11H6zm6 8c-3.87 0-7-3.13-7-7H3c0 4.97 4.03 9 9 9v-2zm7-7c0 3.87-3.13 7-7 7v2c4.97 0 9-4.03 9-9h-2zm-1-1c0 3.31-2.69 6-6 6v2c4.42 0 8-3.58 8-8h-2z" fill="currentColor" opacity=".3"/>
+    <path d="M12 19v3M9 22h6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+   </svg>
+  </button>
+  <div id="catrow"><span>Saving as</span><span id="pill"></span></div>
+  <textarea id="txt" placeholder="What's on your mind?" rows="3" oninput="onType()"></textarea>
+  <div id="btnrow">
+   <button id="sbtn" onclick="doSave()" disabled>Save</button>
+   <button id="vbtn" onclick="showNotes()">View notes</button>
+  </div>
+ </div>
+ <div id="notes">
+  <div id="nh">
+   <button id="bbtn" onclick="showCap()">← Back</button>
+   <b>Notes</b>
+   <span id="nc" style="font-size:11px;color:var(--mut)"></span>
+  </div>
+  <div id="nl"></div>
+ </div>
+</div>
+<div id="toast"></div>
+<script>
+const CATS=['Work','Personal','Finance','Family','Health'];
+const CC={
+  Work:{c:'#185FA5',bg:'#E6F1FB'},
+  Personal:{c:'#0F6E56',bg:'#E1F5EE'},
+  Finance:{c:'#854F0B',bg:'#FAEEDA'},
+  Family:{c:'#993556',bg:'#FBEAF0'},
+  Health:{c:'#533AB7',bg:'#EEEDFE'}
+};
+let notes=[],rec=null,on=false,cur='',cat='';
+try{notes=JSON.parse(localStorage.getItem('dumpit_v1')||'[]')}catch(e){}
+
+function guess(t){
+  t=t.toLowerCase();
+  if(/\b(meet|client|project|deadline|boss|work|office|report|invoice|contract|colleague|manager|presentation|proposal|sprint|standup|hiring|interview|task|deliverable)\b/.test(t))return'Work';
+  if(/\b(pay|bill|money|bank|tax|budget|invest|cost|expense|salary|account|mortgage|rent|insurance|pension|savings|credit|loan|statement|transfer|spend)\b/.test(t))return'Finance';
+  if(/\b(mum|mam|dad|mom|kid|son|daughter|wife|husband|family|brother|sister|parent|child|birthday|anniversary|grandma|grandad|niece|nephew|aunt|uncle|school|pickup)\b/.test(t))return'Family';
+  if(/\b(doctor|dentist|gym|health|run|sleep|pain|med|pill|diet|weight|exercise|physio|appointment|hospital|prescription|blood|therapy|anxiety|stress|mental|wellbeing)\b/.test(t))return'Health';
+  return'Personal';
+}
+
+function initRec(){
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR)return;
+  rec=new SR();rec.continuous=false;rec.interimResults=true;rec.lang='en-US';
+  rec.onresult=e=>{
+    let f='',i='';
+    for(let x=e.resultIndex;x<e.results.length;x++){
+      e.results[x].isFinal?f+=e.results[x][0].transcript:i+=e.results[x][0].transcript;
+    }
+    const el=document.getElementById('txt');
+    el.value=(f||i).trim();cur=el.value;updBtn();
+  };
+  rec.onend=()=>{setOn(false);if(cur.trim())showPill(guess(cur))};
+  rec.onerror=e=>{setOn(false);if(e.error!=='no-speech')toast('Mic unavailable — type instead')};
+}
+
+function toggleMic(){
+  if(!rec){toast('Voice not supported here — type instead');return}
+  if(on){rec.stop();return}
+  document.getElementById('txt').value='';cur='';cat='';hidePill();updBtn();
+  rec.start();setOn(true);
+}
+
+function setOn(v){
+  on=v;
+  const m=document.getElementById('mic'),s=document.getElementById('stat');
+  if(v){m.classList.add('go');s.textContent='Listening…';s.classList.add('on')}
+  else{m.classList.remove('go');s.textContent='Tap the mic to speak, or type below';s.classList.remove('on')}
+}
+
+function onType(){cur=document.getElementById('txt').value;cat='';hidePill();updBtn()}
+function updBtn(){document.getElementById('sbtn').disabled=!cur.trim()}
+function hidePill(){document.getElementById('catrow').classList.remove('show')}
+
+function showPill(c){
+  const p=document.getElementById('pill');
+  p.textContent=c;p.style.background=CC[c].bg;p.style.color=CC[c].c;
+  document.getElementById('catrow').classList.add('show');cat=c;
+}
+
+function doSave(){
+  const text=cur.trim();if(!text)return;
+  const c=cat||guess(text);
+  notes.unshift({id:Date.now(),text,category:c,ts:new Date().toISOString()});
+  try{localStorage.setItem('dumpit_v1',JSON.stringify(notes))}catch(e){}
+  document.getElementById('txt').value='';cur='';
+  document.getElementById('sbtn').disabled=true;
+  showPill(c);toast('Saved to '+c);
+}
+
+function showNotes(){
+  renderNotes();
+  document.getElementById('cap').style.display='none';
+  const n=document.getElementById('notes');n.style.display='flex';n.classList.add('show');
+}
+
+function showCap(){
+  document.getElementById('notes').style.display='none';
+  document.getElementById('notes').classList.remove('show');
+  document.getElementById('cap').style.display='flex';
+}
+
+function renderNotes(){
+  const list=document.getElementById('nl');list.innerHTML='';
+  const g={};CATS.forEach(c=>g[c]=[]);
+  notes.forEach(n=>(g[n.category]||g['Personal']).push(n));
+  let any=false;
+  CATS.forEach(c=>{
+    if(!g[c].length)return;any=true;
+    const s=document.createElement('div');s.className='cs';
+    s.innerHTML=`<h2 style="color:${CC[c].c}">${c}</h2>`;
+    g[c].forEach(n=>{
+      const el=document.createElement('div');el.className='ni';
+      el.innerHTML=`<span class="nt">${esc(n.text)}</span><span class="nm">${ago(n.ts)}</span><button class="nd" onclick="del(${n.id})">×</button>`;
+      s.appendChild(el);
+    });
+    list.appendChild(s);
+  });
+  document.getElementById('nc').textContent=notes.length+' note'+(notes.length!==1?'s':'');
+  if(!any)list.innerHTML='<p class="emp">No notes yet — tap the mic and go</p>';
+}
+
+function del(id){
+  notes=notes.filter(n=>n.id!==id);
+  try{localStorage.setItem('dumpit_v1',JSON.stringify(notes))}catch(e){}
+  renderNotes();
+}
+
+function ago(ts){
+  const s=(Date.now()-new Date(ts))/1000;
+  if(s<60)return'just now';if(s<3600)return Math.floor(s/60)+'m ago';
+  if(s<86400)return Math.floor(s/3600)+'h ago';return Math.floor(s/86400)+'d ago';
+}
+
+function esc(t){return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+
+function toast(msg){
+  const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2400);
+}
+
+initRec();
+</script>
+</body>
+</html>
